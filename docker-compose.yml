@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:15
+    container_name: casdoor-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: casdoor
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  casdoor:
+    image: casbin/casdoor
+    container_name: casdoor
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+      - "10443:10443"
+    volumes:
+      - ./casdoor/conf/app.conf:/conf/app.conf
+      - ./nginx/certs:/certs
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - casdoor
+
+volumes:
+  db-data:

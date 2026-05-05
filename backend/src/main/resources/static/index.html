@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>OIDC Frontend</h2>
+
+<button onclick="login()">Login</button>
+<button onclick="userInfo()">User Info</button>
+
+<pre id="info"></pre>
+<h3 id="msg"></h3>
+
+<script>
+
+    function login() {
+        window.location.href = "/login";
+    }
+
+    function userInfo() {
+        fetch("https://localhost:9000/user-info", {
+            credentials: "include"
+        })
+            .then(r => {
+                if (!r.ok) throw new Error("Unauthorized");
+                return r.json();
+            })
+            .then(data => {
+                document.body.innerHTML = `
+        <h3>User Info</h3>
+        <p>User ID: ${data.id}</p>
+        <p>Name: ${data.name}</p>
+        <p>Email: ${data.email}</p>
+    `;
+            })
+            .catch(() => {
+                document.getElementById("info").innerText = "Not authorized";
+            });
+    }
+
+    // перевірка статусу логіну
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("login") === "success") {
+        document.getElementById("msg").innerText = "successful";
+    }
+
+    if (params.get("login") === "failed") {
+        document.getElementById("msg").innerText = "try again";
+    }
+
+</script>
+
+</body>
+</html>
