@@ -49,7 +49,6 @@ public class CoinWebSocketHandler extends TextWebSocketHandler {
         System.out.println("SESSION CLOSED");
     }
 
-    // 🔥 SEND PROTOBUF
     public void broadcast(String symbol, double price) {
 
         try {

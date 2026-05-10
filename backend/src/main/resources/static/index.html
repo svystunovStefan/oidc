@@ -58,7 +58,7 @@
 
         function startCrypto() {
 
-        document.getElementById("crypto-status").innerText = "🟡 Connecting...";
+        document.getElementById("crypto-status").innerText = "Connecting...";
 
         if (socket && socket.readyState === WebSocket.OPEN) return;
 
@@ -67,7 +67,7 @@
         socket.binaryType = "arraybuffer";
 
         socket.onopen = () => {
-        document.getElementById("crypto-status").innerText = "🟢 Live";
+        document.getElementById("crypto-status").innerText = "Live";
         console.log("WebSocket connected");
 
         socket.send("BTCUSDT");
@@ -137,11 +137,11 @@
                 document.getElementById("user-name").innerText = "Name: " + data.name;
                 document.getElementById("user-email").innerText = "Email: " + data.email;
 
-                document.getElementById("msg").innerText = "✅ Logged in";
+                document.getElementById("msg").innerText = "Logged in";
 
             })
             .catch(() => {
-                document.getElementById("msg").innerText = "❌ Not authorized";
+                document.getElementById("msg").innerText = "Not authorized";
             });
     }
 

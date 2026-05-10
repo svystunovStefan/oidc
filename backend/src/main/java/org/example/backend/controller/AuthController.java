@@ -25,7 +25,7 @@ public class AuthController {
     public void login(HttpServletResponse response) throws IOException {
 
         String url =
-                "https://localhost:10443/login/oauth/authorize" +  // ✅ ОЦЕ СЮДИ FIX
+                "https://localhost:10443/login/oauth/authorize" +
                         "?client_id=bb9ce8c0a83b53d16285" +
                         "&response_type=code" +
                         "&redirect_uri=https://localhost:9000/callback" +
