@@ -30,7 +30,20 @@ public class JwtVerifier {
 
     // 🔥 helper (дуже важливо)
     public static RSAKey getKeyFromJwks(String kid) throws Exception {
-        JWKSet jwkSet = JWKSet.load(new URL(JwkProvider.JWKS_URL));
+
+        System.out.println("JWKS URL: " + JwkProvider.JWKS_URL);
+
+        String json = new String(
+                new java.net.URL(JwkProvider.JWKS_URL)
+                        .openStream()
+                        .readAllBytes()
+        );
+
+        // 🔥 ОЦЕ ТИ ДОДАЄШ ДЛЯ ДЕБАГУ
+        System.out.println("JWKS RESPONSE:");
+        System.out.println(json);
+
+        JWKSet jwkSet = JWKSet.parse(json);
 
         for (JWK jwk : jwkSet.getKeys()) {
             if (jwk.getKeyID().equals(kid)) {

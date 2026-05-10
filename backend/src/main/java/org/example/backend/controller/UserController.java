@@ -17,7 +17,7 @@ import java.util.Map;
 public class UserController {
 
     private static final String JWKS_URL =
-            "https://localhost:10443/.well-known/jwks.json";
+            "https://localhost:10443/.well-known/jwks";
 
     @GetMapping("/debug-cookie")
     public ResponseEntity<?> debugCookie(
@@ -34,40 +34,55 @@ public class UserController {
     @GetMapping("/user-info")
     public ResponseEntity<?> userInfo(HttpServletRequest request) {
 
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies == null) {
-            return ResponseEntity.status(401).body("NO COOKIES AT ALL");
-        }
-
-        String token = null;
-
-        for (Cookie c : cookies) {
-            System.out.println("COOKIE: " + c.getName() + " = " + c.getValue());
-
-            if ("access_token".equals(c.getName())) {
-                token = c.getValue();
-            }
-        }
-
-        if (token == null) {
-            return ResponseEntity.status(401).body("ACCESS TOKEN NOT FOUND");
-        }
-
         try {
+
+            Cookie[] cookies = request.getCookies();
+
+            if (cookies == null) {
+
+                Map<String, Object> err = new HashMap<>();
+                err.put("error", "NO COOKIES");
+
+                return ResponseEntity.status(401).body(err);
+            }
+
+            String token = null;
+
+            for (Cookie c : cookies) {
+
+                if ("access_token".equals(c.getName())) {
+                    token = c.getValue();
+                }
+            }
+
+            if (token == null) {
+
+                Map<String, Object> err = new HashMap<>();
+                err.put("error", "TOKEN NOT FOUND");
+
+                return ResponseEntity.status(401).body(err);
+            }
+
             SignedJWT jwt = SignedJWT.parse(token);
 
-            Map<String, Object> claims = jwt.getJWTClaimsSet().getClaims();
+            Map<String, Object> claims =
+                    jwt.getJWTClaimsSet().getClaims();
 
             Map<String, Object> result = new HashMap<>();
+
             result.put("id", claims.get("sub"));
             result.put("name", claims.get("name"));
             result.put("email", claims.get("email"));
+            result.put("admin", claims.get("isAdmin"));
 
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("JWT ERROR: " + e.getMessage());
+
+            Map<String, Object> err = new HashMap<>();
+            err.put("error", e.getMessage());
+
+            return ResponseEntity.status(500).body(err);
         }
     }
 }

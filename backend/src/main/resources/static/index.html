@@ -1,22 +1,127 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8">
+    <title>OIDC Frontend</title>
+    <script src="https://cdn.jsdelivr.net/npm/protobufjs/dist/protobuf.min.js"></script>
+</head>
+
 <body>
 
 <h2>OIDC Frontend</h2>
 
+<!-- BUTTONS -->
 <button onclick="login()">Login</button>
 <button onclick="userInfo()">User Info</button>
+<button onclick="startCrypto()">Start Crypto</button>
 
-<pre id="info"></pre>
 <h3 id="msg"></h3>
 
+<hr>
+
+<!-- USER INFO -->
+<div id="user-section" style="display:none;">
+    <h3>User Info</h3>
+    <p id="user-id"></p>
+    <p id="user-name"></p>
+    <p id="user-email"></p>
+</div>
+
+<hr>
+
+<!-- CRYPTO -->
+<div>
+    <h3>Crypto prices</h3>
+    <div id="crypto-status">Not started</div>
+
+    <ul>
+        <li>BTC: <span id="btc">-</span></li>
+        <li>ETH: <span id="eth">-</span></li>
+        <li>BNB: <span id="bnb">-</span></li>
+    </ul>
+</div>
+
 <script>
+
+        let socket = null;
+        let CoinUpdate = null;
+
+        protobuf.load("/coin.proto", function (err, root) {
+
+        if (err) {
+        console.error("PROTO LOAD ERROR", err);
+        return;
+    }
+        CoinUpdate = root.lookupType("protobuf.CoinUpdate");
+        console.log("PROTO LOADED");
+    });
+
+        function startCrypto() {
+
+        document.getElementById("crypto-status").innerText = "🟡 Connecting...";
+
+        if (socket && socket.readyState === WebSocket.OPEN) return;
+
+        socket = new WebSocket("wss://localhost:9000/ws/coins");
+
+        socket.binaryType = "arraybuffer";
+
+        socket.onopen = () => {
+        document.getElementById("crypto-status").innerText = "🟢 Live";
+        console.log("WebSocket connected");
+
+        socket.send("BTCUSDT");
+        socket.send("ETHUSDT");
+        socket.send("BNBUSDT");
+    };
+
+        socket.onmessage = (event) => {
+
+        if (!CoinUpdate) {
+        console.log("PROTO NOT READY");
+        return;
+    }
+        try {
+        const buffer = new Uint8Array(event.data);
+
+        const msg = CoinUpdate.decode(buffer);
+        const data = CoinUpdate.toObject(msg);
+
+        console.log("PROTO MESSAGE:", data);
+
+        if (data.symbol === "BTCUSDT") {
+        document.getElementById("btc").innerText = data.price;
+    }
+
+        if (data.symbol === "ETHUSDT") {
+        document.getElementById("eth").innerText = data.price;
+    }
+
+        if (data.symbol === "BNBUSDT") {
+        document.getElementById("bnb").innerText = data.price;
+    }
+
+    } catch (e) {
+        console.log("DECODE ERROR:", e);
+    }
+    };
+
+        socket.onerror = (e) => {
+        console.log("WebSocket error", e);
+        document.getElementById("crypto-status").innerText = "Error";
+    };
+
+        socket.onclose = () => {
+        document.getElementById("crypto-status").innerText = "Disconnected";
+    };
+    }
 
     function login() {
         window.location.href = "/login";
     }
 
     function userInfo() {
+
         fetch("https://localhost:9000/user-info", {
             credentials: "include"
         })
@@ -25,26 +130,29 @@
                 return r.json();
             })
             .then(data => {
-                document.body.innerHTML = `
-        <h3>User Info</h3>
-        <p>User ID: ${data.id}</p>
-        <p>Name: ${data.name}</p>
-        <p>Email: ${data.email}</p>
-    `;
+
+                document.getElementById("user-section").style.display = "block";
+
+                document.getElementById("user-id").innerText = "ID: " + data.id;
+                document.getElementById("user-name").innerText = "Name: " + data.name;
+                document.getElementById("user-email").innerText = "Email: " + data.email;
+
+                document.getElementById("msg").innerText = "✅ Logged in";
+
             })
             .catch(() => {
-                document.getElementById("info").innerText = "Not authorized";
+                document.getElementById("msg").innerText = "❌ Not authorized";
             });
     }
 
-    // перевірка статусу логіну
     const params = new URLSearchParams(window.location.search);
+
     if (params.get("login") === "success") {
-        document.getElementById("msg").innerText = "successful";
+        document.getElementById("msg").innerText = "Login success";
     }
 
     if (params.get("login") === "failed") {
-        document.getElementById("msg").innerText = "try again";
+        document.getElementById("msg").innerText = "Login failed";
     }
 
 </script>

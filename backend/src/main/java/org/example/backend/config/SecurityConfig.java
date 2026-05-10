@@ -9,18 +9,29 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http
+    ) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/coin.proto",
                                 "/login",
                                 "/callback",
-                                "/user-info",
                                 "/logout",
-                                "/index.html",
-                                "/**"
+                                "/user-info",
+                                "/debug-cookie",
+                                "/ws/**"
                         ).permitAll()
+
+                        .anyRequest().authenticated()
                 );
 
         return http.build();

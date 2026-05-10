@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package protobuf;
+
+option java_package = "org.example.backend.protobuf";
+option java_outer_classname = "CoinProto";
+
+message CoinUpdate {
+  string symbol = 1;
+  double price = 2;
+  int64 timestamp = 3;
+}
